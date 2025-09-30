@@ -33,6 +33,9 @@ export function Navbar() {
             <Link href="/citizen" className="text-foreground hover:text-primary transition-colors">
               Citizen
             </Link>
+            <Link href="/mobile" className="text-foreground hover:text-primary transition-colors">
+              Mobile
+            </Link>
             <Link href="/policy" className="text-foreground hover:text-primary transition-colors">
               Policy Dashboard
             </Link>
@@ -77,6 +80,13 @@ export function Navbar() {
                 onClick={() => setIsOpen(false)}
               >
                 Citizen
+              </Link>
+              <Link
+                href="/mobile"
+                className="block px-3 py-2 text-foreground hover:text-primary transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Mobile
               </Link>
               <Link
                 href="/policy"
