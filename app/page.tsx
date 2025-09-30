@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +14,7 @@ export default function HomePage() {
   const [aqiData, setAqiData] = useState<ProcessedAQIData | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+  const router = useRouter()
 
   useEffect(() => {
     loadAQIData()
@@ -159,11 +162,11 @@ export default function HomePage() {
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed">{healthRec.text}</p>
                     <div className="pt-4 space-y-2">
-                      <Button className="w-full bg-transparent" variant="outline">
+                      <Button className="w-full bg-transparent" variant="outline" onClick={() => router.push('/forecast')}>
                         <TrendingUp className="h-4 w-4 mr-2" />
                         View Forecast
                       </Button>
-                      <Button className="w-full bg-transparent" variant="outline">
+                      <Button className="w-full bg-transparent" variant="outline" onClick={() => router.push('/mobile')}>
                         <MapPin className="h-4 w-4 mr-2" />
                         Find Clean Routes
                       </Button>
@@ -177,37 +180,45 @@ export default function HomePage() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="hover:bg-accent transition-colors cursor-pointer">
-            <CardContent className="p-6 text-center">
-              <MapPin className="h-8 w-8 mx-auto mb-3 text-primary" />
-              <h3 className="font-semibold mb-2">Source Map</h3>
-              <p className="text-sm text-muted-foreground">View pollution sources across Delhi-NCR</p>
-            </CardContent>
-          </Card>
+          <Link href="/source-map" className="hover:bg-accent transition-colors cursor-pointer rounded-xl">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <MapPin className="h-8 w-8 mx-auto mb-3 text-primary" />
+                <h3 className="font-semibold mb-2">Source Map</h3>
+                <p className="text-sm text-muted-foreground">View pollution sources across Delhi-NCR</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="hover:bg-accent transition-colors cursor-pointer">
-            <CardContent className="p-6 text-center">
-              <TrendingUp className="h-8 w-8 mx-auto mb-3 text-primary" />
-              <h3 className="font-semibold mb-2">AI Forecast</h3>
-              <p className="text-sm text-muted-foreground">24-72 hour air quality predictions</p>
-            </CardContent>
-          </Card>
+          <Link href="/forecast" className="hover:bg-accent transition-colors cursor-pointer rounded-xl">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <TrendingUp className="h-8 w-8 mx-auto mb-3 text-primary" />
+                <h3 className="font-semibold mb-2">AI Forecast</h3>
+                <p className="text-sm text-muted-foreground">24-72 hour air quality predictions</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="hover:bg-accent transition-colors cursor-pointer">
-            <CardContent className="p-6 text-center">
-              <Wind className="h-8 w-8 mx-auto mb-3 text-primary" />
-              <h3 className="font-semibold mb-2">Safe Routes</h3>
-              <p className="text-sm text-muted-foreground">Find cleaner paths for your journey</p>
-            </CardContent>
-          </Card>
+          <Link href="/mobile" className="hover:bg-accent transition-colors cursor-pointer rounded-xl">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Wind className="h-8 w-8 mx-auto mb-3 text-primary" />
+                <h3 className="font-semibold mb-2">Safe Routes</h3>
+                <p className="text-sm text-muted-foreground">Find cleaner paths for your journey</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="hover:bg-accent transition-colors cursor-pointer">
-            <CardContent className="p-6 text-center">
-              <AlertTriangle className="h-8 w-8 mx-auto mb-3 text-primary" />
-              <h3 className="font-semibold mb-2">Alerts</h3>
-              <p className="text-sm text-muted-foreground">Get notified of air quality changes</p>
-            </CardContent>
-          </Card>
+          <Link href="/citizen" className="hover:bg-accent transition-colors cursor-pointer rounded-xl">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <AlertTriangle className="h-8 w-8 mx-auto mb-3 text-primary" />
+                <h3 className="font-semibold mb-2">Alerts</h3>
+                <p className="text-sm text-muted-foreground">Get notified of air quality changes</p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </main>
     </div>
