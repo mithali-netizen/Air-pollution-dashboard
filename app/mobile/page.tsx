@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter, CardAction } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -21,7 +21,7 @@ import {
   Bell,
   Download,
   Smartphone,
-  Location,
+  LocateIcon,
   RefreshCw
 } from "lucide-react"
 
@@ -154,7 +154,7 @@ export default function MobilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Location className="h-5 w-5" />
+                <LocateIcon className="h-5 w-5" />
                 Location Services
               </CardTitle>
               <CardDescription>GPS-based air quality monitoring and navigation</CardDescription>
@@ -165,7 +165,7 @@ export default function MobilePage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Current Location</span>
                     <Badge variant="outline" className="bg-success text-success-foreground">
-                      <Location className="h-3 w-3 mr-1" />
+                      <LocateIcon className="h-3 w-3 mr-1" />
                       Active
                     </Badge>
                   </div>
@@ -181,12 +181,12 @@ export default function MobilePage() {
                 </div>
               ) : (
                 <div className="text-center py-4">
-                  <Location className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <LocateIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-muted-foreground mb-4">
                     {locationPermission ? "Location permission granted" : "Location permission required"}
                   </p>
                   <Button onClick={initializeMobileFeatures}>
-                    <Location className="h-4 w-4 mr-2" />
+                    <LocateIcon className="h-4 w-4 mr-2" />
                     Enable Location
                   </Button>
                 </div>
