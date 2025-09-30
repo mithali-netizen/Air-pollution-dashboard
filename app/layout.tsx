@@ -1,6 +1,5 @@
 "use client";
 import type React from "react";
-import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
@@ -9,19 +8,9 @@ import { PWAInstall } from "@/components/pwa-install";
 import Footer from "@/components/footer"; // make sure path matches
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "CleanAir Delhi-NCR",
-  description: "Real-time air quality monitoring and forecasting for Delhi-NCR",
-  generator: "CleanAir Delhi-NCR",
-  manifest: "/manifest.json",
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  themeColor: "#0a0a0a",
-};
+// --- Remove metadata and viewport exports ---
+// export const metadata: Metadata = { ... };
+// export const viewport: Viewport = { ... };
 
 export default function RootLayout({
   children,
