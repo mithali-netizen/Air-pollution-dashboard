@@ -8,7 +8,7 @@ import { PWAInstall } from "@/components/pwa-install";
 import Footer from "@/components/footer"; // make sure path matches
 import "./globals.css";
 
-// --- Remove metadata and viewport exports ---
+// --- Removed metadata and viewport exports ---
 // export const metadata: Metadata = { ... };
 // export const viewport: Viewport = { ... };
 
