@@ -1,7 +1,15 @@
+// Add "use client" as the very first line (already present)
+// Ensure all imports are correct and only used in client components
 
-// --- Removed metadata and viewport exports ---
-// export const metadata: Metadata = { ... };
-// export const viewport: Viewport = { ... };
+"use client";
+import type React from "react";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { Analytics } from "@vercel/analytics/next";
+import { Suspense, useEffect, useState } from "react";
+import { PWAInstall } from "@/components/pwa-install";
+import { Footer } from "@/components/footer";
+import "./globals.css";
 
 export default function RootLayout({
   children,
@@ -10,9 +18,8 @@ export default function RootLayout({
 }>) {
   const [footerVisible, setFooterVisible] = useState(false);
 
-  // Trigger footer, PWAInstall & Analytics fade-in + slide-up after mount
   useEffect(() => {
-    const timer = setTimeout(() => setFooterVisible(true), 100); // small delay
+    const timer = setTimeout(() => setFooterVisible(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
@@ -22,7 +29,27 @@ export default function RootLayout({
 
   return (
     <html lang="en" className="dark">
-
+      <body
+        className={`min-h-screen flex flex-col font-sans ${GeistSans.variable} ${GeistMono.variable}`}
+      >
+        <main className="flex-grow">
+          <Suspense fallback={null}>{children}</Suspense>
+        </main>
+        <div
+          className={`transition-all duration-700 ease-out transform ${animationClasses}`}
+        >
+          <PWAInstall />
+        </div>
+        <div
+          className={`transition-all duration-700 ease-out transform ${animationClasses} mt-2`}
+        >
+          <Analytics />
+        </div>
+        <div
+          className={`transition-all duration-700 ease-out transform ${animationClasses} mt-4`}
+        >
+          <Footer />
+        </div>
       </body>
     </html>
   );
