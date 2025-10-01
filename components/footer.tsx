@@ -4,12 +4,12 @@ import { Wind } from "lucide-react";
 export function Footer() {
   return (
     <footer className="bg-card border-t border-border mt-12">
-      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-2 justify-center md:justify-start">
           <Wind className="h-6 w-6 text-primary" />
           <span className="font-bold text-lg text-foreground">CleanAir Delhi-NCR</span>
         </div>
-        <nav className="flex gap-6 text-muted-foreground text-sm">
+        <nav className="flex flex-col gap-2 items-center md:flex-row md:gap-6 text-muted-foreground text-sm">
           <Link href="/" className="hover:text-primary transition-colors">Home</Link>
           <Link href="/source-map" className="hover:text-primary transition-colors">Source Map</Link>
           <Link href="/forecast" className="hover:text-primary transition-colors">Forecast</Link>
@@ -17,7 +17,7 @@ export function Footer() {
           <Link href="/mobile" className="hover:text-primary transition-colors">Mobile</Link>
           <Link href="/policy" className="hover:text-primary transition-colors">Policy</Link>
         </nav>
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-4 items-center justify-center md:justify-end">
           <a
             href="https://github.com/KeerthiYarashi/Air-pollution-dashboard.git"
             target="_blank"

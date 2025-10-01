@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { fetchDelhiAQI, type ProcessedAQIData } from "@/lib/api"
 import { Wind, MapPin, Clock, TrendingUp, AlertTriangle, Leaf } from "lucide-react"
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
 
 export default function HomePage() {
   const [aqiData, setAqiData] = useState<ProcessedAQIData | null>(null)
@@ -36,12 +37,12 @@ export default function HomePage() {
 
   const getHealthRecommendation = (aqi: number) => {
     if (aqi <= 50)
-      return { text: "Air quality is good. Great day for outdoor activities!", icon: Leaf, color: "text-success" }
+      return { text: "Air quality is good. Great day for outdoor activities!", icon: Leaf, color: "text-green-500" }
     if (aqi <= 100)
       return {
         text: "Air quality is moderate. Sensitive individuals should limit outdoor activities.",
         icon: Wind,
-        color: "text-warning",
+        color: "text-yellow-500",
       }
     if (aqi <= 150)
       return {
@@ -53,7 +54,7 @@ export default function HomePage() {
       return {
         text: "Unhealthy air quality. Limit outdoor activities and wear a mask.",
         icon: AlertTriangle,
-        color: "text-destructive",
+        color: "text-red-500",
       }
     if (aqi <= 300)
       return {
@@ -109,21 +110,64 @@ export default function HomePage() {
                       Last updated: {new Date(aqiData.lastUpdated).toLocaleTimeString()}
                     </CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={loadAQIData}>
-                    Refresh
-                  </Button>
+
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={loadAQIData}>
+                      Refresh
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          !
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>AQI Categories</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            <ul className="space-y-2 text-left">
+                              <li><strong>1:</strong> "Good", AQI &lt; 50</li>
+                              <li><strong>2:</strong> "Fair", AQI &lt; 100</li>
+                              <li><strong>3:</strong> "Moderate", AQI &lt; 150</li>
+                              <li><strong>4:</strong> "Poor", AQI &lt; 200</li>
+                              <li><strong>5:</strong> "Very Poor", AQI &lt; 300</li>
+                            </ul>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Close</AlertDialogCancel>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </CardHeader>
+
+
+              {/* note*/}
+
               <CardContent>
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <div
-                      className="text-6xl font-bold mb-2"
-                      style={{ color: `hsl(var(--${aqiData.color.replace("text-", "")}))` }}
-                    >
+                    <div className={`text-6xl font-bold mb-2 ${aqiData.color}`}>
                       {aqiData.aqi}
                     </div>
-                    <Badge variant="secondary" className="text-lg px-3 py-1">
+                    <Badge
+                      variant="secondary"
+                      className={`text-lg px-3 py-1 ${aqiData.status === "Good"
+                        ? "bg-success text-success-foreground"
+                        : aqiData.status === "Moderate"
+                          ? "bg-warning text-warning-foreground"
+                          : aqiData.status === "Unhealthy for Sensitive Groups"
+                            ? "bg-orange-500 text-background"
+                            : aqiData.status === "Unhealthy"
+                              ? "bg-destructive text-background"
+                              : aqiData.status === "Very Unhealthy"
+                                ? "bg-purple-500 text-background"
+                                : "bg-red-700 text-background"
+                        }`}
+                    >
                       {aqiData.status}
                     </Badge>
                   </div>

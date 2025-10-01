@@ -38,14 +38,40 @@ export function getAQIStatus(aqi: number): { status: ProcessedAQIData["status"];
 
 export async function fetchDelhiAQI(): Promise<ProcessedAQIData> {
   try {
-    const response = await fetch("/api/aqi")
+    const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
+    const lat = 28.6139
+    const lon = 77.209
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
+    )
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
     const data = await response.json()
-    return data
+    // OpenWeather AQI is 1-5, map to US AQI
+    const aqiMapping = [0, 50, 100, 150, 200, 300]
+    const airQuality = data.list[0]
+    const aqi = airQuality.main.aqi
+    const usAqi = aqiMapping[aqi] || 150
+    const statusObj = getAQIStatus(usAqi)
+    return {
+      aqi: usAqi,
+      mainPollutant: "PM2.5",
+      status: statusObj.status,
+      color: statusObj.color,
+      lastUpdated: new Date().toISOString(),
+      location: "Delhi",
+      pollutants: {
+        pm25: airQuality.components.pm2_5 || 0,
+        pm10: airQuality.components.pm10 || 0,
+        no2: airQuality.components.no2 || 0,
+        so2: airQuality.components.so2 || 0,
+        co: airQuality.components.co || 0,
+        o3: airQuality.components.o3 || 0,
+      },
+    }
   } catch (error) {
     console.error("Error fetching AQI data:", error)
     // Return fallback data
