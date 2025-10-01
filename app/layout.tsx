@@ -1,40 +1,29 @@
-import type React from "react"
-import type { Metadata, Viewport } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
-import { Suspense } from "react"
-import { PWAInstall } from "@/components/pwa-install"
-import { Footer } from "@/components/footer"
-import "./globals.css"
 
-export const metadata: Metadata = {
-  title: "CleanAir Delhi-NCR",
-  description: "Real-time air quality monitoring and forecasting for Delhi-NCR",
-  generator: "CleanAir Delhi-NCR",
-  manifest: "/manifest.json",
-}
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  themeColor: "#0a0a0a",
-}
+// --- Removed metadata and viewport exports ---
+// export const metadata: Metadata = { ... };
+// export const viewport: Viewport = { ... };
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
+  const [footerVisible, setFooterVisible] = useState(false);
+
+  // Trigger footer, PWAInstall & Analytics fade-in + slide-up after mount
+  useEffect(() => {
+    const timer = setTimeout(() => setFooterVisible(true), 100); // small delay
+    return () => clearTimeout(timer);
+  }, []);
+
+  const animationClasses = footerVisible
+    ? "opacity-100 translate-y-0"
+    : "opacity-0 translate-y-6";
+
   return (
     <html lang="en" className="dark">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={null}>{children}</Suspense>
-        <Footer />
-        <PWAInstall />
-        <Analytics />
+
       </body>
     </html>
-  )
+  );
 }

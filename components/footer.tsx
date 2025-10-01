@@ -1,3 +1,4 @@
+
 import Link from "next/link"
 import { Wind } from "lucide-react"
 
@@ -30,5 +31,3 @@ export function Footer() {
         &copy; {new Date().getFullYear()} CleanAir Delhi-NCR. All rights reserved.
       </div>
     </footer>
-  )
-}
