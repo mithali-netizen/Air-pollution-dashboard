@@ -7,7 +7,7 @@ export async function GET() {
     const lon = 77.209
 
     // Note: In production, you would use process.env.OPENWEATHER_API_KEY
-    const apiKey = "demo_key" // This will fail but we'll catch it and use mock data
+    const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY// This will fail but we'll catch it and use mock data
 
     console.log("[v0] Attempting to fetch air quality data for Delhi")
 

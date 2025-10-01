@@ -39,62 +39,121 @@ export default function MobilePage() {
     initializeMobileFeatures()
   }, [])
 
-  const initializeMobileFeatures = async () => {
-    try {
-      const mobileManager = getMobileFeatureManager()
-      const iotManager = getIoTSensorManager()
-
-      // Request location permission
-      const hasPermission = await mobileManager.requestLocationPermission()
-      setLocationPermission(hasPermission)
-
-      if (hasPermission) {
-        const location = await mobileManager.getCurrentLocation()
-        setCurrentLocation(location)
-
-        if (location) {
-          // Get hyperlocal AQI
-          const aqi = await iotManager.getHyperlocalAQI(location.latitude, location.longitude, 5)
-          setHyperlocalAQI(aqi)
-
-          // Find clean routes (mock destination)
-          const destination = {
-            latitude: location.latitude + 0.01,
-            longitude: location.longitude + 0.01,
-            accuracy: 10,
-            timestamp: new Date().toISOString()
+  
+    const initializeMobileFeatures = async () => {
+      try {
+        const mobileManager = getMobileFeatureManager()
+        const iotManager = getIoTSensorManager()
+  
+        // Request location permission
+        const hasPermission = await mobileManager.requestLocationPermission()
+        setLocationPermission(hasPermission)
+  
+        if (hasPermission) {
+          const location = await mobileManager.getCurrentLocation()
+          setCurrentLocation(location)
+  
+          if (location) {
+            // Fetch real-time AQI from OpenWeatherMap API
+            const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
+            const response = await fetch(
+              `https://api.openweathermap.org/data/2.5/air_pollution?lat=${location.latitude}&lon=${location.longitude}&appid=${apiKey}`
+            )
+            if (response.ok) {
+              const data = await response.json()
+              const aqiMapping = [0, 50, 100, 150, 200, 300]
+              const airQuality = data.list[0]
+              const aqi = airQuality.main.aqi
+              const usAqi = aqiMapping[aqi] || 150
+              setHyperlocalAQI({
+                aqi: usAqi,
+                primaryPollutant: "PM2.5",
+                confidence: 100,
+                sensorCount: 1,
+                lastUpdated: new Date().toISOString(),
+                recommendations: [
+                  usAqi <= 100
+                    ? "Air quality is moderate. You can go outside."
+                    : usAqi <= 150
+                    ? "Unhealthy for sensitive groups. Limit outdoor activities."
+                    : "Unhealthy air quality. Avoid outdoor activities.",
+                ],
+              })
+            } else {
+              console.error("Failed to fetch AQI data")
+            }
+  
+            // Find clean routes (mock destination)
+            const destination = {
+              latitude: location.latitude + 0.01,
+              longitude: location.longitude + 0.01,
+              accuracy: 10,
+              timestamp: new Date().toISOString()
+            }
+            const routes = await mobileManager.findCleanRoutes(location, destination)
+            setCleanRoutes(routes)
+  
+            // Find nearby clean spots
+            const cleanSpots = await mobileManager.getNearbyCleanSpots(location, 2)
+            setNearbyCleanSpots(cleanSpots)
           }
-          const routes = await mobileManager.findCleanRoutes(location, destination)
-          setCleanRoutes(routes)
-
-          // Find nearby clean spots
-          const cleanSpots = await mobileManager.getNearbyCleanSpots(location, 2)
-          setNearbyCleanSpots(cleanSpots)
         }
+  
+        // Get offline data
+        const offline = await mobileManager.getOfflineData()
+        setOfflineData(offline)
+  
+        // Get network status
+        const network = await mobileManager.getNetworkStatus()
+        setNetworkStatus(network)
+  
+      } catch (error) {
+        console.error("Failed to initialize mobile features:", error)
+      } finally {
+        setLoading(false)
       }
-
-      // Get offline data
-      const offline = await mobileManager.getOfflineData()
-      setOfflineData(offline)
-
-      // Get network status
-      const network = await mobileManager.getNetworkStatus()
-      setNetworkStatus(network)
-
-    } catch (error) {
-      console.error("Failed to initialize mobile features:", error)
-    } finally {
-      setLoading(false)
     }
-  }
 
-  const handleLocationTracking = () => {
+
+  const handleLocationTracking = async () => {
     const mobileManager = getMobileFeatureManager()
-    const success = mobileManager.startLocationTracking((location) => {
+    const success = mobileManager.startLocationTracking(async (location) => {
       setCurrentLocation(location)
       console.log("Location updated:", location)
+      try {
+        const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
+        const response = await fetch(
+          `https://api.openweathermap.org/data/2.5/air_pollution?lat=${location.latitude}&lon=${location.longitude}&appid=${apiKey}`
+        )
+        if (response.ok) {
+          const data = await response.json()
+          // OpenWeather AQI is 1-5, map to US AQI
+          const aqiMapping = [0, 50, 100, 150, 200, 300]
+          const airQuality = data.list[0]
+          const aqi = airQuality.main.aqi
+          const usAqi = aqiMapping[aqi] || 150
+          setHyperlocalAQI({
+            aqi: usAqi,
+            primaryPollutant: "PM2.5",
+            confidence: 100,
+            sensorCount: 1,
+            lastUpdated: new Date().toISOString(),
+            recommendations: [
+              usAqi <= 100
+                ? "Air quality is moderate. You can go outside."
+                : usAqi <= 150
+                ? "Unhealthy for sensitive groups. Limit outdoor activities."
+                : "Unhealthy air quality. Avoid outdoor activities.",
+            ],
+          })
+        } else {
+          console.error("Failed to fetch AQI data")
+        }
+      } catch (error) {
+        console.error("Error fetching AQI data:", error)
+      }
     })
-
+  
     if (success) {
       console.log("Location tracking started")
     }

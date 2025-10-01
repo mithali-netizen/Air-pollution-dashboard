@@ -5,6 +5,10 @@
 
 :root {
   /* Updated theme for air quality monitoring app with professional dark theme */
+  --success: #22c55e;
+  --success-foreground: #fff;
+  --warning: #eab308;
+  --warning-foreground: #fff;
   --background: oklch(0.8452 0 0);
   --foreground: oklch(0.2393 0 0);
   --card: oklch(0.7572 0 0);
