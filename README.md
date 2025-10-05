@@ -154,7 +154,7 @@ Available Scripts:
 - Submit a pull request
 
 ---
-* Future Enhancements
+ Future Enhancements
 
 - Background real-time map for the Source Map page to visualize pollution sources dynamically
 
