@@ -154,6 +154,11 @@ Available Scripts:
 - Submit a pull request
 
 ---
+* Future Enhancements
+
+Background real-time map for the Source Map page to visualize pollution sources dynamically
+
+---
 
 📄 **License**
 MIT - See main project license
