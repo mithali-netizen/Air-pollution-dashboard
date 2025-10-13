@@ -32,11 +32,41 @@ export function NotificationSettings() {
 
   const handleEnableNotifications = async () => {
     if (!mounted) return
-    const manager = getNotificationManager()
-    const granted = await manager.requestPermission()
-    if (granted) {
-      setPermissionStatus("granted")
-      setSettings({ ...settings, enabled: true })
+    
+    if (!("Notification" in window)) {
+      alert("This browser does not support notifications")
+      return
+    }
+
+    try {
+      const currentPermission = Notification.permission
+      
+      if (currentPermission === "granted") {
+        setPermissionStatus("granted")
+        setSettings({ ...settings, enabled: true })
+        // Send test notification
+        new Notification("CleanAir Notifications Enabled", {
+          body: "You'll now receive air quality alerts for Delhi-NCR",
+          icon: "/icon-192.png",
+          tag: "notification-enabled"
+        })
+        return
+      }
+      
+      if (currentPermission === "denied") {
+        alert("Notifications are blocked. Please enable them in your browser settings:\n\n1. Click the lock icon in your address bar\n2. Set Notifications to 'Allow'\n3. Refresh this page")
+        return
+      }
+      
+      const manager = getNotificationManager()
+      const granted = await manager.requestPermission()
+      if (granted) {
+        setPermissionStatus("granted")
+        setSettings({ ...settings, enabled: true })
+      }
+    } catch (error) {
+      console.error("Error enabling notifications:", error)
+      alert("Failed to enable notifications. Please try again.")
     }
   }
 
@@ -74,10 +104,22 @@ export function NotificationSettings() {
             <p className="text-sm text-muted-foreground mb-4">
               Get instant alerts when air quality changes in your area
             </p>
-            <Button onClick={handleEnableNotifications}>
-              <Bell className="h-4 w-4 mr-2" />
-              Enable Notifications
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleEnableNotifications}>
+                <Bell className="h-4 w-4 mr-2" />
+                Enable Notifications
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  if (mounted) {
+                    setPermissionStatus(Notification.permission)
+                  }
+                }}
+              >
+                Check Status
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-6">

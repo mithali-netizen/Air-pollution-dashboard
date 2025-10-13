@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Navigation,
   Bell,
+  BellOff,
   Shield,
   Activity,
   Heart,
@@ -26,9 +27,11 @@ export default function CitizenPage() {
   const [aqiData, setAqiData] = useState<ProcessedAQIData | null>(null)
   const [loading, setLoading] = useState(true)
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default")
 
   useEffect(() => {
     loadAQIData()
+    checkNotificationPermission()
     const interval = setInterval(loadAQIData, 300000) // Refresh every 5 minutes
     return () => clearInterval(interval)
   }, [])
@@ -36,6 +39,15 @@ export default function CitizenPage() {
   const loadAQIData = async () => {
     try {
       const data = await fetchDelhiAQI()
+      
+      // Check if AQI has changed significantly and send alert
+      if (aqiData && notificationsEnabled) {
+        const aqiDifference = Math.abs(data.aqi - aqiData.aqi)
+        if (aqiDifference >= 25) { // Alert if AQI changes by 25+ points
+          sendAQIAlert(data.aqi, data.location)
+        }
+      }
+      
       setAqiData(data)
     } catch (error) {
       console.error("Failed to load AQI data:", error)
@@ -44,10 +56,147 @@ export default function CitizenPage() {
     }
   }
 
-  const enableNotifications = async () => {
+  const checkNotificationPermission = () => {
     if ("Notification" in window) {
-      const permission = await Notification.requestPermission()
+      const permission = Notification.permission
+      setNotificationPermission(permission)
       setNotificationsEnabled(permission === "granted")
+    }
+  }
+
+  const refreshNotificationStatus = () => {
+    checkNotificationPermission()
+    if (Notification.permission === "granted") {
+      sendTestNotification()
+    }
+  }
+
+  const enableNotifications = async () => {
+    if (!("Notification" in window)) {
+      alert("This browser does not support notifications")
+      return
+    }
+
+    try {
+      // Check current permission first
+      const currentPermission = Notification.permission
+      
+      if (currentPermission === "granted") {
+        // Already granted, just send test notification
+        setNotificationPermission("granted")
+        setNotificationsEnabled(true)
+        sendTestNotification()
+        return
+      }
+      
+      if (currentPermission === "denied") {
+        // Permission was denied, show instructions
+        showPermissionInstructions()
+        return
+      }
+      
+      // Permission is "default", request it
+      const permission = await Notification.requestPermission()
+      setNotificationPermission(permission)
+      setNotificationsEnabled(permission === "granted")
+      
+      if (permission === "granted") {
+        sendTestNotification()
+      } else if (permission === "denied") {
+        showPermissionInstructions()
+      }
+    } catch (error) {
+      console.error("Error requesting notification permission:", error)
+      alert("Failed to enable notifications. Please try again.")
+    }
+  }
+
+  const sendTestNotification = () => {
+    try {
+      new Notification("CleanAir Notifications Enabled", {
+        body: "You'll now receive air quality alerts for Delhi-NCR",
+        icon: "/icon-192.png",
+        tag: "notification-enabled"
+      })
+    } catch (error) {
+      console.error("Failed to send test notification:", error)
+    }
+  }
+
+  const showPermissionInstructions = () => {
+    const instructions = `
+Notifications are blocked. To enable them:
+
+Chrome/Edge:
+1. Click the lock icon in the address bar
+2. Set Notifications to "Allow"
+3. Refresh this page
+
+Firefox:
+1. Click the shield icon in the address bar
+2. Click "Permissions"
+3. Set Notifications to "Allow"
+4. Refresh this page
+
+Safari:
+1. Go to Safari > Preferences > Websites
+2. Select Notifications
+3. Set this site to "Allow"
+4. Refresh this page
+    `
+    alert(instructions)
+  }
+
+  const disableNotifications = () => {
+    setNotificationsEnabled(false)
+    setNotificationPermission("denied")
+  }
+
+  const sendAQIAlert = (aqi: number, location: string) => {
+    console.log("sendAQIAlert called with:", { aqi, location, notificationsEnabled, notificationPermission })
+    
+    if (!notificationsEnabled || notificationPermission !== "granted") {
+      console.log("Notifications not enabled or permission not granted")
+      alert("Notifications are not enabled. Please enable them first.")
+      return
+    }
+
+    const title = "Air Quality Alert"
+    let body = ""
+    const icon = "/icon-192.png"
+
+    if (aqi <= 100) {
+      body = `Moderate air quality in ${location}. AQI: ${aqi}`
+    } else if (aqi <= 150) {
+      body = `Unhealthy air for sensitive groups in ${location}. AQI: ${aqi}`
+    } else if (aqi <= 200) {
+      body = `Unhealthy air quality in ${location}. AQI: ${aqi}. Limit outdoor activities.`
+    } else if (aqi <= 300) {
+      body = `Very unhealthy air in ${location}. AQI: ${aqi}. Avoid outdoor activities.`
+    } else {
+      body = `Hazardous air quality in ${location}. AQI: ${aqi}. Emergency conditions!`
+    }
+
+    try {
+      console.log("Attempting to send notification:", { title, body })
+      const notification = new Notification(title, {
+        body,
+        icon,
+        badge: "/icon-192.png",
+        tag: "cleanair-alert",
+      })
+
+      notification.onclick = () => {
+        window.focus()
+        notification.close()
+      }
+
+      // Auto close after 10 seconds
+      setTimeout(() => notification.close(), 10000)
+      console.log("Notification sent successfully")
+    } catch (error) {
+      console.error("Failed to send notification:", error)
+      alert("Failed to send notification. Please check your browser settings.")
     }
   }
 
@@ -180,14 +329,58 @@ export default function CitizenPage() {
                     Current Air Quality Status
                   </CardTitle>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant={notificationsEnabled ? "default" : "outline"}
-                      size="sm"
-                      onClick={enableNotifications}
-                    >
-                      <Bell className="h-4 w-4 mr-2" />
-                      {notificationsEnabled ? "Alerts On" : "Enable Alerts"}
-                    </Button>
+                    {notificationPermission === "granted" ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => {
+                            console.log("Alerts On button clicked")
+                            sendTestNotification()
+                          }}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Bell className="h-4 w-4 mr-2" />
+                          Alerts On
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={disableNotifications}
+                          className="text-xs"
+                        >
+                          Disable
+                        </Button>
+                      </div>
+                    ) : notificationPermission === "denied" ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={showPermissionInstructions}
+                        >
+                          <BellOff className="h-4 w-4 mr-2" />
+                          Blocked
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={refreshNotificationStatus}
+                          className="text-xs"
+                        >
+                          Check Again
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={enableNotifications}
+                      >
+                        <Bell className="h-4 w-4 mr-2" />
+                        Enable Alerts
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" onClick={loadAQIData}>
                       <Clock className="h-4 w-4 mr-2" />
                       Refresh
@@ -245,22 +438,65 @@ export default function CitizenPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full justify-start bg-transparent" variant="outline">
+                <Button 
+                  className="w-full justify-start bg-transparent" 
+                  variant="outline"
+                  onClick={() => {
+                    // Scroll to safe routes section
+                    const routesSection = document.querySelector('[data-section="safe-routes"]')
+                    routesSection?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                >
                   <MapPin className="h-4 w-4 mr-2" />
                   Find Clean Routes
                 </Button>
-                <Button className="w-full justify-start bg-transparent" variant="outline">
+                <Button 
+                  className="w-full justify-start bg-transparent" 
+                  variant="outline"
+                  onClick={() => {
+                    // Navigate to forecast page
+                    window.location.href = '/forecast'
+                  }}
+                >
                   <TrendingUp className="h-4 w-4 mr-2" />
                   View 24h Forecast
                 </Button>
-                <Button className="w-full justify-start bg-transparent" variant="outline">
+                <Button 
+                  className="w-full justify-start bg-transparent" 
+                  variant="outline"
+                  onClick={() => {
+                    // Show safety guidelines modal or scroll to health section
+                    const healthSection = document.querySelector('[data-section="health-impacts"]')
+                    healthSection?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                >
                   <Shield className="h-4 w-4 mr-2" />
                   Safety Guidelines
                 </Button>
-                <Button className="w-full justify-start bg-transparent" variant="outline">
+                <Button 
+                  className="w-full justify-start bg-transparent" 
+                  variant="outline"
+                  onClick={() => {
+                    // Navigate to source map page
+                    window.location.href = '/source-map'
+                  }}
+                >
                   <Wind className="h-4 w-4 mr-2" />
                   Nearby Stations
                 </Button>
+                {notificationsEnabled && (
+                  <Button 
+                    className="w-full justify-start bg-transparent" 
+                    variant="outline"
+                    onClick={() => {
+                      console.log("Test Alert button clicked")
+                      sendAQIAlert(aqiData?.aqi || 150, aqiData?.location || "Delhi")
+                    }}
+                  >
+                    <Bell className="h-4 w-4 mr-2" />
+                    Test Alert
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -271,7 +507,7 @@ export default function CitizenPage() {
           <NotificationSettings />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" data-section="health-impacts">
           {/* Health Impact Assessment */}
           <Card>
             <CardHeader>
@@ -316,7 +552,7 @@ export default function CitizenPage() {
         </div>
 
         {/* Safe Route Suggestions */}
-        <Card>
+        <Card data-section="safe-routes">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Navigation className="h-5 w-5" />
@@ -371,7 +607,14 @@ export default function CitizenPage() {
               </div>
             </div>
             <div className="mt-4 text-center">
-              <Button>
+              <Button
+                onClick={() => {
+                  // Open Google Maps with directions
+                  const delhiCoords = "28.6139,77.209"
+                  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${delhiCoords}&travelmode=driving&avoid=tolls|highways`
+                  window.open(googleMapsUrl, '_blank')
+                }}
+              >
                 <MapPin className="h-4 w-4 mr-2" />
                 Get Detailed Directions
               </Button>
